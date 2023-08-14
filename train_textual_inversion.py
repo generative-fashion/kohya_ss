@@ -5,7 +5,6 @@ import os
 from multiprocessing import Value
 import toml
 
-from tqdm import tqdm
 import torch
 from accelerate.utils import set_seed
 from diffusers import DDPMScheduler
@@ -482,7 +481,6 @@ class TextualInversionTrainer:
         accelerator.print(f"  gradient ccumulation steps / 勾配を合計するステップ数 = {args.gradient_accumulation_steps}")
         accelerator.print(f"  total optimization steps / 学習ステップ数: {args.max_train_steps}")
 
-        progress_bar = tqdm(range(args.max_train_steps), smoothing=0, disable=not accelerator.is_local_main_process, desc="steps")
         global_step = 0
 
         noise_scheduler = DDPMScheduler(
@@ -589,7 +587,6 @@ class TextualInversionTrainer:
 
                 # Checks if the accelerator has performed an optimization step behind the scenes
                 if accelerator.sync_gradients:
-                    progress_bar.update(1)
                     global_step += 1
 
                     self.sample_images(
@@ -645,7 +642,6 @@ class TextualInversionTrainer:
                 loss_total += current_loss
                 avr_loss = loss_total / (step + 1)
                 logs = {"loss": avr_loss}  # , "lr": lr_scheduler.get_last_lr()[0]}
-                progress_bar.set_postfix(**logs)
 
                 if global_step >= args.max_train_steps:
                     break
